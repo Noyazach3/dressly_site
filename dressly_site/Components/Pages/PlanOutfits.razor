@@ -1,0 +1,40 @@
+﻿@page "/plan-outfit"
+
+<PageTitle>תכנון אאוטפיט</PageTitle>
+
+<h3>תכנן את האאוטפיט שלך</h3>
+
+<EditForm Model="@outfit" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label for="itemName">שם הפריט:</label>
+        <InputText id="itemName" @bind-Value="outfit.ItemName" />
+    </div>
+    <div>
+        <label for="category">קטגוריה:</label>
+        <InputText id="category" @bind-Value="outfit.Category" />
+    </div>
+    <button type="submit">הוסף אאוטפיט</button>
+</EditForm>
+
+@code {
+    [Inject] 
+    private NavigationManager NavigationManager { get; set; }
+
+    private Outfit outfit = new Outfit();
+
+    private async Task HandleSubmit()
+    {
+        // הגיון להוסיף את האאוטפיט למערכת
+        // לאחר מכן ננווט לדף הראשי
+        NavigationManager.NavigateTo("/home");
+    }
+
+    public class Outfit
+    {
+        public string ItemName { get; set; }
+        public string Category { get; set; }
+    }
+}

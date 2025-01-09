@@ -1,0 +1,53 @@
+﻿@page "/login"
+@inject NavigationManager Navigation
+
+<h1 style="text-align:center;">Login</h1>
+
+<div class="container" style="max-width: 400px; margin-top: 20px;">
+    <EditForm Model="@loginRequest" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="email" style="text-align: right; display: block;">:אימייל</label>
+            <InputText id="email" type="email" class="form-control" @bind-Value="loginRequest.Email" required />
+        </div>
+
+        <div class="form-group">
+            <label for="password" style="text-align: right; display: block;">:סיסמה</label>
+            <InputText id="password" type="password" class="form-control" @bind-Value="loginRequest.Password" required />
+        </div>
+
+
+        <div class="form-group" style="margin-top: 20px;">
+            <button type="submit" class="btn btn-lg" style="background-color: #ff69b4; border: none; font-size: 1.25em; font-weight: bold; width: 100%; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); transform: translateY(0); transition: transform 0.2s ease;">
+                התחבר
+            </button>
+        </div>
+
+    </EditForm>
+
+    <div style="margin-top: 10px; text-align: center;">
+        <p>אין לך חשבון? <a href="/signup">הירשם כאן</a></p>
+    </div>
+</div>
+
+@code {
+    private LoginRequest loginRequest = new LoginRequest();
+
+    private void HandleValidSubmit()
+    {
+        // כאן תוכל להוסיף את הקוד לשלוח את הנתונים לשרת (לוגין) ולטפל במצבים שונים
+        // לדוגמה, שליחה ל-API לצורך אימות המשתמש
+
+        // אם הלוגין הצליח, תוכל לנווט לעמוד הבית או לעמוד אחר
+        Console.WriteLine($"User logged in with email: {loginRequest.Email}");
+        Navigation.NavigateTo("/home"); // ניווט לעמוד הבית אחרי התחברות מוצלחת
+    }
+
+    public class LoginRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+}

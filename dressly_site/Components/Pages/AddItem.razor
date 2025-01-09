@@ -1,0 +1,40 @@
+﻿@page "/add-item"
+
+<PageTitle>Add Item</PageTitle>
+
+<h3>הוסף פריט חדש</h3>
+
+<EditForm Model="@item" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label for="name">שם פריט:</label>
+        <InputText id="name" @bind-Value="item.Name" />
+    </div>
+    <div>
+        <label for="category">קטגוריה:</label>
+        <InputText id="category" @bind-Value="item.Category" />
+    </div>
+    <button type="submit">הוסף פריט</button>
+</EditForm>
+
+@code {
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    private ClothingItem item = new ClothingItem();
+
+    private async Task HandleSubmit()
+    {
+        // הגיון להוסיף את הפריט למערכת
+        // לאחר מכן ננווט לדף הראשי
+        NavigationManager.NavigateTo("/home");
+    }
+
+    public class ClothingItem
+    {
+        public string Name { get; set; }
+        public string Category { get; set; }
+    }
+}

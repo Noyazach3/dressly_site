@@ -1,0 +1,53 @@
+﻿@page "/signup"
+@inject NavigationManager Navigation
+
+<h1 style="text-align:center;">Sign up</h1>
+
+<div class="container" style="max-width: 400px; margin-top: 20px;">
+    <EditForm Model="@user" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="name" style="text-align: right; display: block;">:שם</label>
+            <InputText id="name" class="form-control" @bind-Value="user.Name" required />
+        </div>
+
+        <div class="form-group">
+            <label for="email" style="text-align: right; display: block;">:אימייל</label>
+            <InputText id="email" type="email" class="form-control" @bind-Value="user.Email" required />
+        </div>
+
+        <div class="form-group">
+            <label for="password" style="text-align: right; display: block;">:סיסמה</label>
+            <InputText id="password" type="password" class="form-control" @bind-Value="user.Password" required />
+        </div>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <button type="submit" class="btn btn-lg" style="background-color: #ff69b4; border: none; font-size: 1.25em; font-weight: bold; width: 100%; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); transform: translateY(0); transition: transform 0.2s ease;">
+              הרשמה
+            </button>
+        </div>
+
+
+    </EditForm>
+</div>
+
+@code {
+    private User user = new User();
+
+    private void HandleValidSubmit()
+    {
+        Console.WriteLine("Form submitted successfully!");  // בדוק אם הפונקציה נקראת
+
+        // ניווט אחרי הרשמה מוצלחת
+        Navigation.NavigateTo("/login");  // ניווט לדף הכניסה
+    }
+
+    public class User
+    {
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+}
