@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace dressly_site.Models
+namespace ClassLibrary1.Models
 {
     public class User
     {

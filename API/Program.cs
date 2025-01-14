@@ -1,4 +1,3 @@
-
 namespace API
 {
     public class Program
@@ -7,9 +6,12 @@ namespace API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // מוסיף את IConfiguration לשירותים
+            builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
+            // Add services to the container.
             builder.Services.AddControllers();
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -24,7 +26,6 @@ namespace API
             }
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 

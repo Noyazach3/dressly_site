@@ -1,40 +1,66 @@
-﻿@page "/plan-outfit"
+﻿@page "/plan-outfits"
+@inject NavigationManager Navigation
 
-<PageTitle>תכנון אאוטפיט</PageTitle>
-
-<h3>תכנן את האאוטפיט שלך</h3>
-
-<EditForm Model="@outfit" OnValidSubmit="HandleSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div>
-        <label for="itemName">שם הפריט:</label>
-        <InputText id="itemName" @bind-Value="outfit.ItemName" />
+<div class="center-content">
+    <h1>תכנון אאוטפיט</h1>
+    <div class="button-container">
+        <button class="btn pink-btn" @onclick="NavigateToNextPage">אאוטפיט לפי נושאים</button>
+        <button class="btn pink-btn" @onclick="NavigateToAnotherPage">אאוטפיט כללי</button>
     </div>
-    <div>
-        <label for="category">קטגוריה:</label>
-        <InputText id="category" @bind-Value="outfit.Category" />
-    </div>
-    <button type="submit">הוסף אאוטפיט</button>
-</EditForm>
+</div>
 
-@code {
-    [Inject] 
-    private NavigationManager NavigationManager { get; set; }
-
-    private Outfit outfit = new Outfit();
-
-    private async Task HandleSubmit()
-    {
-        // הגיון להוסיף את האאוטפיט למערכת
-        // לאחר מכן ננווט לדף הראשי
-        NavigationManager.NavigateTo("/home");
+<style>
+    /* מרכז את כל התוכן באמצע המסך */
+    .center-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh; /* תופס את כל גובה המסך */
+        text-align: center;
     }
 
-    public class Outfit
+    /* עיצוב הכפתורים */
+    .btn {
+        font-size: 1.5rem; /* גודל טקסט גדול יותר */
+        padding: 15px 30px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 10px; /* רווח בין הכפתורים */
+    }
+
+    /* כפתורים בצבע ורוד */
+    .pink-btn {
+        background-color: #ff69b4; /* ורוד */
+        color: white;
+    }
+
+        .pink-btn:hover {
+            background-color: #ff1493; /* ורוד כהה יותר */
+        }
+
+    /* מיכל לכפתורים */
+    .button-container {
+        display: flex;
+        gap: 15px; /* רווח בין הכפתורים */
+    }
+
+    /* כותרת גדולה */
+    h1 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+    }
+</style>
+
+@code {
+    private void NavigateToNextPage()
     {
-        public string ItemName { get; set; }
-        public string Category { get; set; }
+        Navigation.NavigateTo("/outfit-planner-thematic"); // ניווט לעמוד "אאוטפיט לפי נושאים"
+    }
+
+    private void NavigateToAnotherPage()
+    {
+        Navigation.NavigateTo("/general-outfit"); // ניווט לעמוד "אאוטפיט כללי"
     }
 }

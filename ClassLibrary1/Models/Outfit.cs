@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace dressly_site.Models
+namespace ClassLibrary1.Models
 {
     public class Outfit
     {

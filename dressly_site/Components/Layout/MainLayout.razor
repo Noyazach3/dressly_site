@@ -1,22 +1,41 @@
 ﻿@inherits LayoutComponentBase
-
+@inject NavigationManager Navigation; 
 <div class="page">
-    <div class="sidebar">
-    </div>
+    <!-- שורת הניווט העליונה -->
+    <header class="top-row">
+        <button class="btn-nav" @onclick="NavigateToHome">בית</button>
+        <button class="btn-nav" @onclick="NavigateToAddItem">הוסף פריט</button>
+        <button class="btn-nav" @onclick="NavigateToPlanOutfits">תכנון אאוטפיט</button>
+        <button class="btn-nav" @onclick="NavigateToViewOutfits">אאוטפיטים מתוכננים</button>
+    </header>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body+
+        <article class="content">
+            @Body
         </article>
     </main>
 </div>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
+
+
+@code {
+    private void NavigateToHome()
+    {
+        Navigation.NavigateTo("/home"); // ניווט לעמוד הבית
+    }
+
+    private void NavigateToAddItem()
+    {
+        Navigation.NavigateTo("/add-item"); // ניווט לעמוד הוספת פריט
+    }
+
+    private void NavigateToPlanOutfits()
+    {
+        Navigation.NavigateTo("/plan-outfits"); // ניווט לעמוד תכנון אאוטפיט
+    }
+
+    private void NavigateToViewOutfits()
+    {
+        Navigation.NavigateTo("/planned-outfits"); // ניווט לעמוד הצגת אאוטפיטים מתוכננים
+    }
+}

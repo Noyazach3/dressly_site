@@ -1,6 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using dressly_site.Data;
-using dressly_site.Models;
 using dressly_site.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,21 +6,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// הוספת HttpClient אם צריך לתקשורת עם ה-API
 builder.Services.AddHttpClient("API", client =>
 {
     client.BaseAddress = new Uri("http://localhost:57864/");
 });
 
-// הוספת ה-DbContext עם חיבור למסד נתונים MySQL
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-                     new MySqlServerVersion(new Version(8, 0, 28)))); // שינוי גרסה בהתאם לגרסה שלך
+// הוספת Middleware של Antiforgery
+builder.Services.AddAntiforgery();
 
-// הוספת שירותים לבקרים (Controllers)
 builder.Services.AddControllers();
 
-// הוספת Swagger לשירותים אם במצב פיתוח
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddSwaggerGen();
@@ -31,7 +23,6 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-// הפעלת Swagger במצב פיתוח
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -44,13 +35,13 @@ else
 
 app.UseStaticFiles();
 
-// אם יש צורך ב-AntiForgery (כמו בטפסים)
+// סדר הפעלת ה-Middleware
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
-// מיפוי Controllers
 app.MapControllers();
-
-// מיפוי Razor Components
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
