@@ -1,5 +1,6 @@
 ﻿@page "/signup"
 @inject NavigationManager Navigation
+@inject HttpClient Http
 
 <h1 style="text-align:center;">Sign up</h1>
 
@@ -9,8 +10,8 @@
         <ValidationSummary />
 
         <div class="form-group">
-            <label for="name" style="text-align: right; display: block;">:שם</label>
-            <InputText id="name" class="form-control" @bind-Value="user.Name" required />
+            <label for="Username" style="text-align: right; display: block;">:שם</label>
+            <InputText id="Username" class="form-control" @bind-Value="user.Username" required />
         </div>
 
         <div class="form-group">
@@ -19,35 +20,62 @@
         </div>
 
         <div class="form-group">
-            <label for="password" style="text-align: right; display: block;">:סיסמה</label>
-            <InputText id="password" type="password" class="form-control" @bind-Value="user.Password" required />
+            <label for="PasswordHash" style="text-align: right; display: block;">:סיסמה</label>
+            <InputText id="PasswordHash" type="PasswordHash" class="form-control" @bind-Value="user.PasswordHash" required />
         </div>
 
         <div class="form-group" style="margin-top: 20px;">
             <button type="submit" class="btn btn-lg" style="background-color: #ff69b4; border: none; font-size: 1.25em; font-weight: bold; width: 100%; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); transform: translateY(0); transition: transform 0.2s ease;">
-              הרשמה
+                הרשמה
             </button>
         </div>
-
-
     </EditForm>
+
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <p style="text-align:center; color:@(IsError ? "red" : "green");">@Message</p>
+    }
 </div>
 
 @code {
     private User user = new User();
+    private string Message;
+    private bool IsError;
 
-    private void HandleValidSubmit()
+    private async Task HandleValidSubmit()
     {
-        Console.WriteLine("Form submitted successfully!");  // בדוק אם הפונקציה נקראת
+        try
+        {
+            // שליחת הנתונים ל-API
+var response = await Http.PostAsJsonAsync("api/User/Register", user);
 
-        // ניווט אחרי הרשמה מוצלחת
-        Navigation.NavigateTo("/login");  // ניווט לדף הכניסה
+
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "User registered successfully!";
+                IsError = false;
+
+                // ניווט אחרי הצלחה
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = $"Registration failed: {errorContent}";
+                IsError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"An error occurred: {ex.Message}";
+            IsError = true;
+        }
     }
 
     public class User
     {
-        public string Name { get; set; }
+        public string Username { get; set; }
         public string Email { get; set; }
-        public string Password { get; set; }
+        public string PasswordHash { get; set; }
     }
 }

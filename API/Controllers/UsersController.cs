@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using BootstrapBlazor.Components;
+using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient; // חיבור ל-MySQL
 using System.Data;
 
@@ -15,7 +16,7 @@ public class UserController : ControllerBase
 
     // פעולה לאימות משתמש
     [HttpGet("ValidateLogin")]
-    public IActionResult ValidateLogin([FromQuery] string username, [FromQuery] string passwordHash)
+    public IActionResult ValidateLogin([FromQuery] string username, [FromQuery] string passwordHash, [FromQuery] string Email)
     {
         string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
@@ -26,13 +27,16 @@ public class UserController : ControllerBase
                 conn.Open();
 
                 // שאילתה לבדיקה אם המשתמש קיים
-                string query = "SELECT COUNT(*) FROM users WHERE Username = @Username AND PasswordHash = @PasswordHash";
+                string query = "SELECT COUNT(*) FROM users WHERE Username = @Username AND PasswordHash = @PasswordHash AND Email = @Email"
+;
 
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
                     // הוספת פרמטרים לשאילתה
                     cmd.Parameters.AddWithValue("@Username", username);
                     cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
+                    cmd.Parameters.AddWithValue("@Email", Email);
+
 
                     // הרצת השאילתה וקבלת התוצאה
                     int userCount = Convert.ToInt32(cmd.ExecuteScalar());
@@ -48,4 +52,62 @@ public class UserController : ControllerBase
             return StatusCode(500, new { Message = "An error occurred", Error = ex.Message });
         }
     }
+
+    // פעולה לרישום משתמש חדש
+    [HttpPost("Register")]
+    public IActionResult Register([FromBody] User newUser)
+    {
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+        try
+        {
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // בדיקה אם המשתמש כבר קיים
+                string checkQuery = "SELECT COUNT(*) FROM users WHERE Username = @Username";
+
+                using (MySqlCommand checkCmd = new MySqlCommand(checkQuery, conn))
+                {
+                    checkCmd.Parameters.AddWithValue("@Username", newUser.Username);
+                    int userCount = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+                    if (userCount > 0)
+                    {
+                        return BadRequest("User already exists");
+                    }
+                }
+
+                // הוספת המשתמש החדש
+                string insertQuery = "INSERT INTO users (Username, PasswordHash, Email) VALUES (@Username, @PasswordHash, @Email)";
+
+                using (MySqlCommand insertCmd = new MySqlCommand(insertQuery, conn))
+                {
+                    insertCmd.Parameters.AddWithValue("@Username", newUser.Username);
+                    insertCmd.Parameters.AddWithValue("@PasswordHash", newUser.PasswordHash);
+                    insertCmd.Parameters.AddWithValue("@Email", newUser.Email);
+
+                    insertCmd.ExecuteNonQuery();
+                }
+
+
+                return Ok("User registered successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            // טיפול בשגיאות
+            return StatusCode(500, new { Message = "An error occurred", Error = ex.Message });
+        }
+    }
+}
+
+// מודל עבור המשתמש
+public class User
+{
+    public string Username { get; set; }
+    public string PasswordHash { get; set; }
+
+    public string Email { get; set; }
 }

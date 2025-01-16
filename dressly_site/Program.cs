@@ -6,10 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// הוספת HttpClient עם כתובת בסיס נכונה ל-API
 builder.Services.AddHttpClient("API", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:57864/");
+    client.BaseAddress = new Uri("http://localhost:40132/swagger/index.html");
 });
+
 
 // הוספת Middleware של Antiforgery
 builder.Services.AddAntiforgery();

@@ -9,24 +9,42 @@ namespace API
             // מוסיף את IConfiguration לשירותים
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
-            // Add services to the container.
+            // הוספת שירותי CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.WithOrigins("http://localhost:57864") // הכתובת של Blazor
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
+            // הוספת שירותים ל-API
             builder.Services.AddControllers();
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            // Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // הפעלת Swagger רק במצב פיתוח
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
+            // הפעלת Static Files אם נדרש
+            app.UseStaticFiles();
+
+            // הפעלת Middleware
+            app.UseRouting();
+            app.UseCors(); // הפעלת CORS
             app.UseAuthorization();
 
+            // מיפוי ה-Controllers
             app.MapControllers();
 
             app.Run();

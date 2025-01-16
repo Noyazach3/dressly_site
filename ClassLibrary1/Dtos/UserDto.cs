@@ -11,6 +11,6 @@ namespace ClassLibrary1.Dtos
     {
         public string Name { get; set; } // שם המשתמש
         public string Email { get; set; } // כתובת האימייל
-        public string Password { get; set; } // סיסמה
+        public string PasswordHash { get; set; } // סיסמה
     }
 }
