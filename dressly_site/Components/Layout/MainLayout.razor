@@ -7,6 +7,8 @@
         <button class="btn-nav" @onclick="NavigateToAddItem">הוסף פריט</button>
         <button class="btn-nav" @onclick="NavigateToPlanOutfits">תכנון אאוטפיט</button>
         <button class="btn-nav" @onclick="NavigateToViewOutfits">אאוטפיטים מתוכננים</button>
+        <button class="btn-nav" @onclick="NavigateToLaundry">מעקב כביסה</button>
+
     </header>
 
     <main>
@@ -36,6 +38,12 @@
 
     private void NavigateToViewOutfits()
     {
-        Navigation.NavigateTo("/planned-outfits"); // ניווט לעמוד הצגת אאוטפיטים מתוכננים
+        Navigation.NavigateTo("/outfit-list"); // ניווט לעמוד הצגת אאוטפיטים מתוכננים
+    }
+
+    private void NavigateToLaundry()
+    {
+        Navigation.NavigateTo("/laundry-list"); // ניווט לעמוד הצגת מעקב כביסה
+
     }
 }
