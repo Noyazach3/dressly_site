@@ -47,7 +47,7 @@
         try
         {
             // שליחת הנתונים ל-API
-var response = await Http.PostAsJsonAsync("api/User/Register", user);
+            var response = await Http.PostAsJsonAsync("api/User/Register", user);
 
 
             if (response.IsSuccessStatusCode)
