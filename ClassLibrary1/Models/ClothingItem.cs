@@ -17,10 +17,12 @@ namespace ClassLibrary1.Models
         public DateTime? DateAdded { get; set; }
         public DateTime? LastWornDate { get; set; }
         public int WashAfterUses { get; set; } = 1;
+        public string UsageType { get; set; } // סוג השימוש
+        public string ColorName { get; set; } // שם הצבע
 
         public User User { get; set; }
         public Color Color { get; set; }
-        public ICollection<OutfitItem> OutfitItems { get; set; }
+        public ICollection<OutfitItem> OutfitItems { get; set; }    
         public ICollection<Favorite> Favorites { get; set; }
         public ICollection<ClothingItemTag> ClothingItemTags { get; set; }
         public ICollection<ClothingItemUsage> ClothingItemUsages { get; set; }

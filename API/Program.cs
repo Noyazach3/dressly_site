@@ -20,6 +20,25 @@ namespace API
                 });
             });
 
+            // בדיקת מחרוזת החיבור
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                Console.WriteLine("Connection string is missing or empty.");
+            }
+            else
+            {
+                Console.WriteLine($"Connection string: {connectionString}");
+            }
+
+            // הוספת ClothingService עם קריאת מחרוזת החיבור מתוך IConfiguration
+            builder.Services.AddScoped<ClothingService>(sp =>
+            {
+                var configuration = sp.GetRequiredService<IConfiguration>();
+                var connectionString = configuration.GetConnectionString("DefaultConnection");
+                return new ClothingService(connectionString);
+            });
+
             // הוספת שירותים ל-API
             builder.Services.AddControllers();
 
