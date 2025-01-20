@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace API
 {
     public class Program
@@ -6,21 +8,10 @@ namespace API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // מוסיף את IConfiguration לשירותים
+            // הוספת IConfiguration לשירותים
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
-            // הוספת שירותי CORS
-            builder.Services.AddCors(options =>
-            {
-                options.AddDefaultPolicy(policy =>
-                {
-                    policy.WithOrigins("http://localhost:57864") // הכתובת של Blazor
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
-                });
-            });
-
-            // בדיקת מחרוזת החיבור
+            // קריאת מחרוזת החיבור
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -31,13 +22,8 @@ namespace API
                 Console.WriteLine($"Connection string: {connectionString}");
             }
 
-            // הוספת ClothingService עם קריאת מחרוזת החיבור מתוך IConfiguration
-            builder.Services.AddScoped<ClothingService>(sp =>
-            {
-                var configuration = sp.GetRequiredService<IConfiguration>();
-                var connectionString = configuration.GetConnectionString("DefaultConnection");
-                return new ClothingService(connectionString);
-            });
+            // רישום ClothingService עם מחרוזת חיבור
+            builder.Services.AddScoped(sp => new ClothingService(connectionString));
 
             // הוספת שירותים ל-API
             builder.Services.AddControllers();
@@ -48,19 +34,13 @@ namespace API
 
             var app = builder.Build();
 
-            // הפעלת Swagger רק במצב פיתוח
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
-            // הפעלת Static Files אם נדרש
-            app.UseStaticFiles();
-
-            // הפעלת Middleware
             app.UseRouting();
-            app.UseCors(); // הפעלת CORS
             app.UseAuthorization();
 
             // מיפוי ה-Controllers
