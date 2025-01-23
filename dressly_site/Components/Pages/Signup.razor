@@ -1,8 +1,6 @@
 ﻿@page "/signup"
 @inject NavigationManager Navigation
 @inject HttpClient Http
-@inject HttpClient Http
-
 
 <h1 style="text-align:center;">Sign up</h1>
 
@@ -49,7 +47,7 @@
         try
         {
             // שליחת הנתונים ל-API
-            var response = await Http.PostAsJsonAsync("api/User/Register", user);
+            var response = await Http.PostAsJsonAsync("api/User/Registerr", user);
 
 
             if (response.IsSuccessStatusCode)

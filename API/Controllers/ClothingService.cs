@@ -1,18 +1,21 @@
 ﻿using MySql.Data.MySqlClient;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ClassLibrary1.Models; // הפניה למחלקות מתוך ClassLibrary1.Models
 
 public class ClothingService
 {
-    private readonly string _connectionString; // הגדרת משתנה private עבור מחרוזת החיבור
+    private readonly string _connectionString;
 
-    // Constructor לקבלת מחרוזת חיבו ר
-    public ClothingService(string connectionString)
+    private readonly HttpClient _httpClient;
+
+    public ClothingService(HttpClient httpClient)
     {
-        _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+        _httpClient = httpClient;
     }
+
+
+
 
     // פונקציה לספירת פריטים בארון
     public async Task<int> GetTotalItemsAsync(int userId)
@@ -69,6 +72,7 @@ public class ClothingService
                                 ? (DateTime?)null
                                 : reader.GetDateTime(reader.GetOrdinal("LastWornDate")), // date
                             WashAfterUses = reader.GetInt32(reader.GetOrdinal("WashAfterUses")), // int
+                                                                                                 // הוספת UsageType ו-ColorName
                             UsageType = reader.GetString(reader.GetOrdinal("UsageType")), // varchar
                             ColorName = reader.GetString(reader.GetOrdinal("ColorName")) // varchar
                         });
@@ -79,6 +83,8 @@ public class ClothingService
 
         return items;
     }
+
+
 
     // פונקציה להוספת פריט חדש
     public async Task AddClothingItemAsync(ClothingItem item)
@@ -104,4 +110,5 @@ public class ClothingService
             }
         }
     }
+
 }

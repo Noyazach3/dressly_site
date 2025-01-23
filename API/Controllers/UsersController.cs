@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MySql.Data.MySqlClient;
-using System;
+﻿using BootstrapBlazor.Components;
+using Microsoft.AspNetCore.Mvc;
+using MySql.Data.MySqlClient; // חיבור ל-MySQL
+using System.Data;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -15,7 +16,7 @@ public class UserController : ControllerBase
 
     // פעולה לאימות משתמש
     [HttpGet("ValidateLogin")]
-    public IActionResult ValidateLogin([FromQuery] string username, [FromQuery] string passwordHash, [FromQuery] string email)
+    public IActionResult ValidateLogin([FromQuery] string username, [FromQuery] string passwordHash, [FromQuery] string Email)
     {
         string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
@@ -26,14 +27,16 @@ public class UserController : ControllerBase
                 conn.Open();
 
                 // שאילתה לבדיקה אם המשתמש קיים
-                string query = "SELECT COUNT(*) FROM users WHERE Username = @Username AND PasswordHash = @PasswordHash AND Email = @Email";
+                string query = "SELECT COUNT(*) FROM users WHERE Username = @Username AND PasswordHash = @PasswordHash AND Email = @Email"
+;
 
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
                     // הוספת פרמטרים לשאילתה
                     cmd.Parameters.AddWithValue("@Username", username);
                     cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
-                    cmd.Parameters.AddWithValue("@Email", email);
+                    cmd.Parameters.AddWithValue("@Email", Email);
+
 
                     // הרצת השאילתה וקבלת התוצאה
                     int userCount = Convert.ToInt32(cmd.ExecuteScalar());
@@ -54,11 +57,6 @@ public class UserController : ControllerBase
     [HttpPost("Register")]
     public IActionResult Register([FromBody] User newUser)
     {
-        if (string.IsNullOrWhiteSpace(newUser.Username) || string.IsNullOrWhiteSpace(newUser.PasswordHash) || string.IsNullOrWhiteSpace(newUser.Email))
-        {
-            return BadRequest("All fields are required.");
-        }
-
         string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
         try
@@ -77,7 +75,7 @@ public class UserController : ControllerBase
 
                     if (userCount > 0)
                     {
-                        return BadRequest("User already exists.");
+                        return BadRequest("User already exists");
                     }
                 }
 
@@ -93,7 +91,8 @@ public class UserController : ControllerBase
                     insertCmd.ExecuteNonQuery();
                 }
 
-                return Ok("User registered successfully.");
+
+                return Ok("User registered successfully");
             }
         }
         catch (Exception ex)
@@ -109,5 +108,6 @@ public class User
 {
     public string Username { get; set; }
     public string PasswordHash { get; set; }
+
     public string Email { get; set; }
 }

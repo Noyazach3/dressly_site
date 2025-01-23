@@ -1,9 +1,4 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
-namespace API
+ï»¿namespace API
 {
     public class Program
     {
@@ -11,42 +6,45 @@ namespace API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // äåñôú IConfiguration ìùéøåúéí
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ IConfiguration ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
-            // ÷øéàú îçøåæú äçéáåø
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            if (string.IsNullOrEmpty(connectionString))
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ CORS
+            builder.Services.AddCors(options =>
             {
-                Console.WriteLine("Connection string is missing or empty.");
-            }
-            else
-            {
-                Console.WriteLine($"Connection string: {connectionString}");
-            }
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.WithOrigins("http://localhost:57864") // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Blazor
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
 
-            // øéùåí ClothingService òí îçøåæú çéáåø
-            builder.Services.AddScoped(sp => new ClothingService(connectionString));
-
-            // äåñôú ùéøåúéí ì-API
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½-API
             builder.Services.AddControllers();
 
-            // äåñôú Swagger
+            // Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ Swagger ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ Static Files ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            app.UseStaticFiles();
+
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ Middleware
             app.UseRouting();
+            app.UseCors(); // ï¿½ï¿½ï¿½ï¿½ï¿½ CORS
             app.UseAuthorization();
 
-            // îéôåé ä-Controllers
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½-Controllers
             app.MapControllers();
 
             app.Run();

@@ -1,26 +1,27 @@
+ï»¿using dressly_site.Components;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// äåñôú IConfiguration ìùéøåúéí
-builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+// Ã¤Ã¥Ã±Ã´Ãº Ã¹Ã©Ã¸Ã¥ÃºÃ©Ã­ Ã¬Ã Ã´Ã¬Ã©Ã·Ã¶Ã©Ã¤
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
-// ÷øéàú îçøåæú äçéáåø îúåê appsettings.json
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-if (string.IsNullOrEmpty(connectionString))
+// Ã¤Ã¥Ã±Ã´Ãº HttpClient Ã²Ã­ Ã«ÃºÃ¥Ã¡Ãº Ã¡Ã±Ã©Ã± Ã°Ã«Ã¥Ã°Ã¤ Ã¬-API
+builder.Services.AddHttpClient("API", client =>
 {
-    Console.WriteLine("Connection string is missing or empty.");
-}
-else
-{
-    Console.WriteLine($"Connection string: {connectionString}");
-}
+    client.BaseAddress = new Uri("http://localhost:40132/swagger/index.html");
+});
 
-// øéùåí ClothingService òí îçøåæú çéáåø
-builder.Services.AddScoped(sp => new ClothingService(connectionString));
+
+// Ã¤Ã¥Ã±Ã´Ãº Middleware Ã¹Ã¬ Antiforgery
+builder.Services.AddAntiforgery();
 
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSwaggerGen();
+}
 
 var app = builder.Build();
 
@@ -29,7 +30,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseExceptionHandler("/Error");
+}
 
+app.UseStaticFiles();
+
+// Ã±Ã£Ã¸ Ã¤Ã´Ã²Ã¬Ãº Ã¤-Middleware
+app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
+app.UseAntiforgery();
+
 app.MapControllers();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+
 app.Run();
