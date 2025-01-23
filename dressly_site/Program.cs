@@ -1,36 +1,35 @@
-using dressly_site.Components;
-using Microsoft.Extensions.DependencyInjection;
-
 var builder = WebApplication.CreateBuilder(args);
 
-// הוספת Razor Pages ו-Blazor Server
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+// הוספת IConfiguration לשירותים
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
-// הגדרת HttpClient עם כתובת בסיסית ל-API
-builder.Services.AddHttpClient("API", client =>
+// קריאת מחרוזת החיבור מתוך appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrEmpty(connectionString))
 {
-    client.BaseAddress = new Uri("http://localhost:5000/"); // כתובת ה-API שלך
-});
+    Console.WriteLine("Connection string is missing or empty.");
+}
+else
+{
+    Console.WriteLine($"Connection string: {connectionString}");
+}
 
-// רישום ClothingService עם HttpClient
-builder.Services.AddScoped(sp =>
-    new ClothingService(sp.GetRequiredService<IHttpClientFactory>().CreateClient("API")));
+// רישום ClothingService עם מחרוזת חיבור
+builder.Services.AddScoped(sp => new ClothingService(connectionString));
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
-
+app.UseAuthorization();
+app.MapControllers();
 app.Run();

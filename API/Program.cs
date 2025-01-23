@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace API
 {
@@ -28,7 +31,7 @@ namespace API
             // הוספת שירותים ל-API
             builder.Services.AddControllers();
 
-            // Swagger
+            // הוספת Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
