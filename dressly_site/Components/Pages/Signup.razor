@@ -1,6 +1,8 @@
 ﻿@page "/signup"
 @inject NavigationManager Navigation
 @inject HttpClient Http
+@inject IHttpClientFactory ClientFactory
+
 
 <h1 style="text-align:center;">Sign up</h1>
 
@@ -21,7 +23,7 @@
 
         <div class="form-group">
             <label for="PasswordHash" style="text-align: right; display: block;">:סיסמה</label>
-            <InputText id="PasswordHash" type="PasswordHash" class="form-control" @bind-Value="user.PasswordHash" required />
+            <InputText id="PasswordHash" type="password" class="form-control" @bind-Value="user.PasswordHash" required />
         </div>
 
         <div class="form-group" style="margin-top: 20px;">
@@ -46,9 +48,8 @@
     {
         try
         {
-            // שליחת הנתונים ל-API
-            var response = await Http.PostAsJsonAsync("api/User/Registerr", user);
-
+            var client = ClientFactory.CreateClient("API");
+            var response = await client.PostAsJsonAsync("User/ValidateLogin", user);
 
             if (response.IsSuccessStatusCode)
             {

@@ -1,50 +1,54 @@
-﻿using dressly_site.Components;
+﻿using ClassLibrary1.Dtos;
+using dressly_site.Components;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// äåñôú ùéøåúéí ìàôìé÷öéä
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-
-// äåñôú HttpClient òí ëúåáú áñéñ ðëåðä ì-API
-builder.Services.AddHttpClient("API", client =>
+namespace dressly_site
 {
-    client.BaseAddress = new Uri("http://localhost:40132/swagger/index.html");
-});
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
 
+            // Add services to the container.
+            builder.Services.AddRazorComponents()
+                .AddInteractiveServerComponents();
 
-// äåñôú Middleware ùì Antiforgery
-builder.Services.AddAntiforgery();
+            // הוספת LoginSession לשירותים
+            builder.Services.AddSingleton<UserDto>();
 
-builder.Services.AddControllers();
+            // Register HttpClient עם כתובת בסיס
+            builder.Services.AddHttpClient("API", client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:40132/api/");
+            });
 
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddSwaggerGen();
+            // הוספת שירותי Controllers
+            builder.Services.AddControllers();
+
+            var app = builder.Build();
+
+            // Configure the HTTP request pipeline.
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseExceptionHandler("/Error");
+            }
+
+            app.UseStaticFiles();
+
+            // הוספת Middleware עבור Authorization
+            app.UseRouting();
+            app.UseAuthentication(); // אם יש לך Authentication
+            app.UseAuthorization(); // קריטי להפעיל את המדיניות
+
+            app.UseAntiforgery();
+
+            // רישום נתיבים עבור API
+            app.MapControllers();
+
+            app.MapRazorComponents<App>()
+                .AddInteractiveServerRenderMode();
+
+            app.Run();
+        }
+    }
 }
-
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
-{
-    app.UseExceptionHandler("/Error");
-}
-
-app.UseStaticFiles();
-
-// ñãø äôòìú ä-Middleware
-app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseAntiforgery();
-
-app.MapControllers();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-app.Run();

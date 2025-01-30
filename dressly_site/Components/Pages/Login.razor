@@ -42,7 +42,7 @@
         try
         {
             // שליחת בקשה ל-API
-            var response = await Http.GetAsync($"api/User/ValidateLogin?email={loginRequest.Email}&password={loginRequest.PasswordHash}");
+            var response = await Http.GetAsync($"api/User/Login?email={loginRequest.Email}&password={loginRequest.PasswordHash}");
 
             if (response.IsSuccessStatusCode)
             {
