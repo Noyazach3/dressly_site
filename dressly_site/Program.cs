@@ -9,6 +9,8 @@ namespace dressly_site
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddScoped<ClothingService>();
+
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
@@ -16,11 +18,12 @@ namespace dressly_site
             // הוספת LoginSession לשירותים
             builder.Services.AddSingleton<UserDto>();
 
-            // Register HttpClient עם כתובת בסיס
             builder.Services.AddHttpClient("API", client =>
             {
+                // הגדרת כתובת בסיס ל־HttpClient
                 client.BaseAddress = new Uri("http://localhost:40132/api/");
             });
+
 
             // הוספת שירותי Controllers
             builder.Services.AddControllers();

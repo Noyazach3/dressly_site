@@ -3,12 +3,8 @@
 @using MySql.Data.MySqlClient
 @inject NavigationManager Navigation
 
-
-
-
 <div class="center-page">
     <h1>העלאת פריט לבוש</h1>
-
 
     <div class="form-container text-right">
         <EditForm Model="@clothingItem" OnValidSubmit="HandleValidSubmit">
@@ -87,9 +83,6 @@
 </div>
 
 <style>
-
-
-
     /* מרכזת את הכותרת */
     .center-page {
         display: flex;
@@ -158,8 +151,7 @@
 </style>
 
 @code {
-
-
+    // המודל כולל מזהה פריט – אם ItemID הוא 0, אז זהו פריט חדש (INSERT), אחרת נבצע UPDATE.
     private ClothingItem clothingItem = new ClothingItem();
     private IBrowserFile selectedFile;
 
@@ -180,10 +172,21 @@
 
             clothingItem.ImageURL = filePath;
             clothingItem.DateAdded = DateTime.Now;
+
+            // קריאה לפונקציה שמעדכנת את טבלת ClothingItems:
             await SaveClothingItemToDatabase(clothingItem);
+
+            // ניווט לעמוד הבית לאחר השלמת הפעולה
+            NavigateToHome();
         }
     }
 
+    /// <summary>
+    /// פונקציה שמעדכנת את טבלת ClothingItems.
+    /// אם ItemID = 0, מתבצעת הכנסת פריט חדש (INSERT).
+    /// אם ItemID > 0, מתבצעת עדכון פריט קיים (UPDATE).
+    /// </summary>
+    /// <param name="item">האובייקט ClothingItem שמכיל את הנתונים לעדכון.</param>
     private async Task SaveClothingItemToDatabase(ClothingItem item)
     {
         var connectionString = Configuration.GetConnectionString("DefaultConnection");
@@ -191,26 +194,56 @@
         {
             await connection.OpenAsync();
 
-            var query = @"INSERT INTO ClothingItems (Category, Season, UsageType, Color, ImageURL, WashAfterUses, DateAdded)
-                          VALUES (@Category, @Season, @UsageType, @Color, @ImageURL, @WashAfterUses, @DateAdded)";
-
-            using (var command = new MySqlCommand(query, connection))
+            if (item.ItemID == 0)
             {
-                command.Parameters.AddWithValue("@Category", item.Category);
-                command.Parameters.AddWithValue("@Season", item.Season);
-                command.Parameters.AddWithValue("@UsageType", item.UsageType);
-                command.Parameters.AddWithValue("@Color", item.Color);
-                command.Parameters.AddWithValue("@ImageURL", item.ImageURL);
-                command.Parameters.AddWithValue("@WashAfterUses", item.WashAfterUses);
-                command.Parameters.AddWithValue("@DateAdded", item.DateAdded);
+                // שאילתת INSERT – הכנסת פריט חדש
+                var query = @"INSERT INTO ClothingItems (Category, Season, UsageType, Color, ImageURL, WashAfterUses, DateAdded)
+                              VALUES (@Category, @Season, @UsageType, @Color, @ImageURL, @WashAfterUses, @DateAdded)";
+                using (var command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Category", item.Category);
+                    command.Parameters.AddWithValue("@Season", item.Season);
+                    command.Parameters.AddWithValue("@UsageType", item.UsageType);
+                    command.Parameters.AddWithValue("@Color", item.Color);
+                    command.Parameters.AddWithValue("@ImageURL", item.ImageURL);
+                    command.Parameters.AddWithValue("@WashAfterUses", item.WashAfterUses);
+                    command.Parameters.AddWithValue("@DateAdded", item.DateAdded);
 
-                await command.ExecuteNonQueryAsync();
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+            else
+            {
+                // שאילתת UPDATE – עדכון פריט קיים
+                var query = @"UPDATE ClothingItems
+                              SET Category = @Category,
+                                  Season = @Season,
+                                  UsageType = @UsageType,
+                                  Color = @Color,
+                                  ImageURL = @ImageURL,
+                                  WashAfterUses = @WashAfterUses,
+                                  DateAdded = @DateAdded
+                              WHERE ItemID = @ItemID";
+                using (var command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Category", item.Category);
+                    command.Parameters.AddWithValue("@Season", item.Season);
+                    command.Parameters.AddWithValue("@UsageType", item.UsageType);
+                    command.Parameters.AddWithValue("@Color", item.Color);
+                    command.Parameters.AddWithValue("@ImageURL", item.ImageURL);
+                    command.Parameters.AddWithValue("@WashAfterUses", item.WashAfterUses);
+                    command.Parameters.AddWithValue("@DateAdded", item.DateAdded);
+                    command.Parameters.AddWithValue("@ItemID", item.ItemID);
+
+                    await command.ExecuteNonQueryAsync();
+                }
             }
         }
     }
 
     public class ClothingItem
     {
+        public int ItemID { get; set; } // מזהה הפריט – 0 אם חדש
         public string Category { get; set; }
         public string Season { get; set; }
         public string UsageType { get; set; }
@@ -222,7 +255,6 @@
 
     private void NavigateToHome()
     {
-        Navigation.NavigateTo("/home"); // הנתיב לעמוד הבית
+        Navigation.NavigateTo("/home"); // ניווט לעמוד הבית
     }
-
 }

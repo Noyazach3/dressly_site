@@ -1,34 +1,60 @@
 ﻿@page "/login"
-@inject HttpClient Http
+@inject IHttpClientFactory ClientFactory
 @inject NavigationManager Navigation
-@inject HttpClient Http
+@inject IJSRuntime JSRuntime // נדרש לשמירת הנתונים ב-localStorage
 
-<h1 style="text-align:center;">Login</h1>
+<div class="d-flex min-vh-100 justify-content-center align-items-center bg-light">
+    <div class="container" style="max-width: 400px;">
+        <h1 style="text-align:center;">Login</h1>
 
-<div class="container" style="max-width: 400px; margin-top: 20px;">
-    <EditForm Model="@loginRequest" OnValidSubmit="HandleValidSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+        <!-- טופס ההתחברות עם EditForm -->
+        <EditForm Model="@loginRequest" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-        <div class="form-group">
-            <label for="email" style="text-align: right; display: block;">:אימייל</label>
-            <InputText id="email" type="email" class="form-control" @bind-Value="loginRequest.Email" required />
+            <!-- שדה להזנת שם משתמש -->
+            <div class="form-group">
+                <label for="username" style="text-align: right; display: block;">:שם משתמש</label>
+                <InputText id="username" type="text" class="form-control"
+                           @bind-Value="loginRequest.Username" required />
+            </div>
+
+            <!-- שדה להזנת אימייל -->
+            <div class="form-group">
+                <label for="email" style="text-align: right; display: block;">:אימייל</label>
+                <InputText id="email" type="email" class="form-control"
+                           @bind-Value="loginRequest.Email" required />
+            </div>
+
+            <!-- שדה להזנת סיסמה -->
+            <div class="form-group">
+                <label for="PasswordHash" style="text-align: right; display: block;">:סיסמה</label>
+                <InputText id="PasswordHash" type="password" class="form-control"
+                           @bind-Value="loginRequest.PasswordHash" required />
+            </div>
+
+            <!-- לחצן התחברות -->
+            <div class="form-group" style="margin-top: 20px;">
+                <button type="submit" class="btn btn-lg"
+                        style="background-color: #ff69b4; border: none; font-size: 1.25em; font-weight: bold; width: 100%;
+                               box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); transform: translateY(0); transition: transform 0.2s ease;">
+                    התחבר
+                </button>
+            </div>
+        </EditForm>
+
+        <!-- קישור לדף ההרשמה -->
+        <div style="margin-top: 10px; text-align: center;">
+            <p>אין לך חשבון? <a href="/signup">הירשם כאן</a></p>
         </div>
 
-        <div class="form-group">
-            <label for="PasswordHash" style="text-align: right; display: block;">:סיסמה</label>
-            <InputText id="PasswordHash" type="PasswordHash" class="form-control" @bind-Value="loginRequest.PasswordHash" required />
-        </div>
-
-        <div class="form-group" style="margin-top: 20px;">
-            <button type="submit" class="btn btn-lg" style="background-color: #ff69b4; border: none; font-size: 1.25em; font-weight: bold; width: 100%; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); transform: translateY(0); transition: transform 0.2s ease;">
-                התחבר
-            </button>
-        </div>
-    </EditForm>
-
-    <div style="margin-top: 10px; text-align: center;">
-        <p>אין לך חשבון? <a href="/signup">הירשם כאן</a></p>
+        <!-- הצגת הודעות שגיאה במידה וקיימת -->
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="alert alert-danger mt-3">
+                @Message
+            </div>
+        }
     </div>
 </div>
 
@@ -38,39 +64,60 @@
 
     private async Task HandleValidSubmit()
     {
-        Console.WriteLine("HandleValidSubmit triggered");
         try
         {
-            // שליחת בקשה ל-API
-            var response = await Http.GetAsync($"api/User/Login?email={loginRequest.Email}&password={loginRequest.PasswordHash}");
+            // יצירת לקוח HTTP באמצעות IHttpClientFactory עם שם "API"
+            var client = ClientFactory.CreateClient("API");
 
+            // בניית ה-URI עם כל הפרמטרים
+            var url = $"User/ValidateLogin?username={Uri.EscapeDataString(loginRequest.Username)}" +
+                      $"&email={Uri.EscapeDataString(loginRequest.Email)}" +
+                      $"&passwordHash={Uri.EscapeDataString(loginRequest.PasswordHash)}";
+
+            var response = await client.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 var isValid = await response.Content.ReadFromJsonAsync<bool>();
-
                 if (isValid)
                 {
-                    Navigation.NavigateTo("/home");
+                    // קבלת תפקיד המשתמש
+                    var roleResponse = await client.GetAsync($"User/GetUserRole?username={Uri.EscapeDataString(loginRequest.Username)}");
+                    var userRole = await roleResponse.Content.ReadAsStringAsync();
+
+                    // שמירת הנתונים ב-localStorage
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "username", loginRequest.Username);
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "role", userRole);
+
+                    // ניווט בהתאם לתפקיד המשתמש
+                    if (userRole == "Admin")
+                    {
+                        Navigation.NavigateTo("/admin-dashboard");
+                    }
+                    else
+                    {
+                        Navigation.NavigateTo("/home");
+                    }
                 }
                 else
                 {
-                    Message = "Invalid credentials. Please try again.";
+                    Message = "שם משתמש או סיסמה שגויים.";
                 }
             }
             else
             {
-                Message = "Failed to connect to the server.";
+                Message = "חיבור לשרת נכשל.";
             }
         }
         catch (Exception ex)
         {
-            Message = $"An error occurred: {ex.Message}";
+            Message = $"שגיאה: {ex.Message}";
         }
     }
 
     public class LoginRequest
     {
-        public string Email { get; set; }
-        public string PasswordHash { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty;
     }
 }

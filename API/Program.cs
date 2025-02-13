@@ -1,4 +1,10 @@
-﻿namespace API
+﻿using System.Reflection;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using MySql.Data.MySqlClient;
+
+namespace API
 {
     public class Program
     {
@@ -6,48 +12,87 @@
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // ����� �� IConfiguration ��������
+            // הוספת IConfiguration
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
-            // ����� ������ CORS
+            // הגדרת CORS - מאפשר קריאות מ־Blazor
             builder.Services.AddCors(options =>
             {
                 options.AddDefaultPolicy(policy =>
                 {
-                    policy.WithOrigins("http://localhost:57864") // ������ �� Blazor
+                    policy.WithOrigins("http://localhost:57864") // דומיין Blazor
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
             });
 
-            // ����� ������� �-API
+            // חיבור למסד הנתונים MySQL
+            string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddSingleton(new MySqlConnection(connectionString));
+
+            // הוספת שירותי Controllers
             builder.Services.AddControllers();
+
+            // הוספת שירותי Authorization מותאמים אישית
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("UserOnly", policy => policy.RequireAssertion(context =>
+                    IsUserRole(context.User.Identity?.Name, "User")));
+
+                options.AddPolicy("AdminOnly", policy => policy.RequireAssertion(context =>
+                    IsUserRole(context.User.Identity?.Name, "Admin")));
+            });
 
             // Swagger
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                options.IncludeXmlComments(xmlPath);
+            });
 
             var app = builder.Build();
 
-            // ����� Swagger �� ���� �����
+            // שימוש ב-Swagger בסביבת פיתוח
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
-            // ����� Static Files �� ����
+            // Static Files
             app.UseStaticFiles();
 
-            // ����� Middleware
+            // Middleware
             app.UseRouting();
-            app.UseCors(); // ����� CORS
+            app.UseCors();
             app.UseAuthorization();
 
-            // ����� �-Controllers
+            // מיפוי Controllers
             app.MapControllers();
 
             app.Run();
+        }
+
+        // פונקציה לבדיקה אם המשתמש בתפקיד מסוים (User או Admin)
+        private static bool IsUserRole(string username, string role)
+        {
+            if (string.IsNullOrEmpty(username))
+                return false;
+
+            string connectionString = "Server=localhost;Database=your_database;User=root;Password=your_password;";
+            using (var connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "SELECT Role FROM Users WHERE Username = @Username";
+                using (var command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Username", username);
+                    var result = command.ExecuteScalar();
+                    return result != null && result.ToString() == role;
+                }
+            }
         }
     }
 }

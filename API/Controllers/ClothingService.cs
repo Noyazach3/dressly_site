@@ -1,27 +1,26 @@
 ﻿using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ClassLibrary1.Models; // הפניה למחלקות מתוך ClassLibrary1.Models
+using ClassLibrary1.Models;
+using Microsoft.Extensions.Configuration;
+using System.Data;
 
 public class ClothingService
 {
     private readonly string _connectionString;
 
-    private readonly HttpClient _httpClient;
-
-    public ClothingService(HttpClient httpClient)
+    public ClothingService(IConfiguration configuration)
     {
-        _httpClient = httpClient;
+        _connectionString = configuration.GetConnectionString("DefaultConnection");
     }
 
-
-
-
-    // פונקציה לספירת פריטים בארון
+    // ------------------------------------------------------------------
+    // פעולה לשליפת כמות כללית של בגדים לפי משתמש
+    // SELECT COUNT(*) FROM clothingitems WHERE UserID = @UserId
+    // ------------------------------------------------------------------
     public async Task<int> GetTotalItemsAsync(int userId)
     {
-        int totalItems = 0;
-
         using (var connection = new MySqlConnection(_connectionString))
         {
             await connection.OpenAsync();
@@ -30,16 +29,16 @@ public class ClothingService
             using (var command = new MySqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@UserId", userId);
-
                 var result = await command.ExecuteScalarAsync();
-                totalItems = Convert.ToInt32(result);
+                return Convert.ToInt32(result);
             }
         }
-
-        return totalItems;
     }
 
-    // פונקציה לשליפת פריטים שדורשים כביסה
+    // ------------------------------------------------------------------
+    // שליפת בגדים שדורשים כביסה
+    // SELECT * FROM clothingitems WHERE UserID = @UserId AND TimesWorn >= WashAfterUses
+    // ------------------------------------------------------------------
     public async Task<List<ClothingItem>> GetItemsForLaundryAsync(int userId)
     {
         var items = new List<ClothingItem>();
@@ -59,22 +58,17 @@ public class ClothingService
                     {
                         items.Add(new ClothingItem
                         {
-                            ItemID = reader.GetInt32(reader.GetOrdinal("ItemID")), // int
-                            UserID = reader.GetInt32(reader.GetOrdinal("UserID")), // int
-                            Category = reader.GetString(reader.GetOrdinal("Category")), // varchar
-                            ColorID = reader.GetInt32(reader.GetOrdinal("ColorID")), // int
-                            Season = reader.GetString(reader.GetOrdinal("Season")), // varchar
-                            ImageURL = reader.GetString(reader.GetOrdinal("ImageURL")), // varchar
-                            DateAdded = reader.IsDBNull(reader.GetOrdinal("DateAdded"))
-                                ? (DateTime?)null
-                                : reader.GetDateTime(reader.GetOrdinal("DateAdded")), // date
-                            LastWornDate = reader.IsDBNull(reader.GetOrdinal("LastWornDate"))
-                                ? (DateTime?)null
-                                : reader.GetDateTime(reader.GetOrdinal("LastWornDate")), // date
-                            WashAfterUses = reader.GetInt32(reader.GetOrdinal("WashAfterUses")), // int
-                                                                                                 // הוספת UsageType ו-ColorName
-                            UsageType = reader.GetString(reader.GetOrdinal("UsageType")), // varchar
-                            ColorName = reader.GetString(reader.GetOrdinal("ColorName")) // varchar
+                            ItemID = reader.GetInt32("ItemID"),
+                            UserID = reader.GetInt32("UserID"),
+                            Category = reader.GetString("Category"),
+                            ColorID = reader.GetInt32("ColorID"),
+                            Season = reader.GetString("Season"),
+                            ImageURL = reader.GetString("ImageURL"),
+                            DateAdded = reader.IsDBNull("DateAdded") ? (DateTime?)null : reader.GetDateTime("DateAdded"),
+                            LastWornDate = reader.IsDBNull("LastWornDate") ? (DateTime?)null : reader.GetDateTime("LastWornDate"),
+                            WashAfterUses = reader.GetInt32("WashAfterUses"),
+                            UsageType = reader.GetString("UsageType"),
+                            ColorName = reader.GetString("ColorName")
                         });
                     }
                 }
@@ -84,9 +78,11 @@ public class ClothingService
         return items;
     }
 
-
-
-    // פונקציה להוספת פריט חדש
+    // ------------------------------------------------------------------
+    // הוספת פריט חדש לארון המשתמש
+    // INSERT INTO clothingitems (UserID, Category, ColorID, Season, ImageURL, DateAdded, WashAfterUses, LastWornDate)
+    // VALUES (@UserID, @Category, @ColorID, @Season, @ImageURL, @DateAdded, @WashAfterUses, NULL)
+    // ------------------------------------------------------------------
     public async Task AddClothingItemAsync(ClothingItem item)
     {
         using (var connection = new MySqlConnection(_connectionString))
@@ -98,17 +94,111 @@ public class ClothingService
 
             using (var command = new MySqlCommand(query, connection))
             {
-                command.Parameters.AddWithValue("@UserID", item.UserID); // int
-                command.Parameters.AddWithValue("@Category", item.Category); // string
-                command.Parameters.AddWithValue("@ColorID", item.ColorID); // int
-                command.Parameters.AddWithValue("@Season", item.Season); // string
-                command.Parameters.AddWithValue("@ImageURL", item.ImageURL); // string
-                command.Parameters.AddWithValue("@DateAdded", item.DateAdded ?? DateTime.Now); // DateTime או null
-                command.Parameters.AddWithValue("@WashAfterUses", item.WashAfterUses); // int
+                command.Parameters.AddWithValue("@UserID", item.UserID);
+                command.Parameters.AddWithValue("@Category", item.Category);
+                command.Parameters.AddWithValue("@ColorID", item.ColorID);
+                command.Parameters.AddWithValue("@Season", item.Season);
+                command.Parameters.AddWithValue("@ImageURL", item.ImageURL);
+                command.Parameters.AddWithValue("@DateAdded", item.DateAdded ?? DateTime.Now);
+                command.Parameters.AddWithValue("@WashAfterUses", item.WashAfterUses);
 
                 await command.ExecuteNonQueryAsync();
             }
         }
     }
 
+    // ------------------------------------------------------------------
+    // מחיקת פריט בגדים (Admin בלבד)
+    // DELETE FROM clothingitems WHERE ItemID = @ItemID
+    // ------------------------------------------------------------------
+    public async Task<bool> DeleteClothingItemAsync(int itemId, int userId)
+    {
+        if (!await IsAdminAsync(userId))
+        {
+            return false; // רק מנהל יכול למחוק פריטים
+        }
+
+        using (var connection = new MySqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            var query = "DELETE FROM clothingitems WHERE ItemID = @ItemID";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@ItemID", itemId);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+
+        return true;
+    }
+
+    // ------------------------------------------------------------------
+    // בדיקה אם המשתמש הוא מנהל
+    // SELECT Role FROM users WHERE UserID = @UserId
+    // ------------------------------------------------------------------
+    private async Task<bool> IsAdminAsync(int userId)
+    {
+        using (var connection = new MySqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            var query = "SELECT Role FROM users WHERE UserID = @UserId";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@UserId", userId);
+                var role = await command.ExecuteScalarAsync();
+                return role != null && role.ToString() == "Admin";
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // שליפת סטטיסטיקות בגדים (כמות בגדים, קטגוריות פופולריות)
+    // ------------------------------------------------------------------
+    public async Task<object> GetClothingStatisticsAsync()
+    {
+        using (var connection = new MySqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+
+            // כמות כללית של בגדים
+            string clothingCountQuery = "SELECT COUNT(*) FROM clothingitems";
+            int totalClothingItems;
+            using (var cmd = new MySqlCommand(clothingCountQuery, connection))
+            {
+                totalClothingItems = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            }
+
+            // קטגוריות בגדים פופולריות
+            string popularCategoriesQuery = @"
+                SELECT Category, COUNT(*) as Count 
+                FROM clothingitems 
+                GROUP BY Category 
+                ORDER BY Count DESC
+                LIMIT 5";
+
+            var popularCategories = new List<object>();
+            using (var cmd = new MySqlCommand(popularCategoriesQuery, connection))
+            {
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        popularCategories.Add(new
+                        {
+                            Category = reader["Category"].ToString(),
+                            Count = Convert.ToInt32(reader["Count"])
+                        });
+                    }
+                }
+            }
+
+            return new
+            {
+                TotalClothingItems = totalClothingItems,
+                PopularCategories = popularCategories
+            };
+        }
+    }
 }
