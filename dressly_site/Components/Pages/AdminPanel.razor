@@ -80,21 +80,16 @@ else
     private int TotalUsers = 0;
     private int TotalClothingItems = 0;
     private List<CategoryStat> PopularCategories = new();
-    private bool firstRender = true;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
-        {
-            var role = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "role");
-            IsAdmin = role == "Admin";
+        var client = ClientFactory.CreateClient("API");
+        var response = await client.GetFromJsonAsync<UserRoleResponse>("Admin/GetUserRole");
 
-            if (IsAdmin)
-            {
-                await LoadUsers();
-                await LoadStatistics();
-            }
-            StateHasChanged();
+        if (response != null)
+        {
+            IsAdmin = response.Role == "Admin";
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "role", response.Role); // עדכון localStorage
         }
     }
 
@@ -135,6 +130,11 @@ else
         await client.PostAsync($"Admin/ResetPassword?username={Uri.EscapeDataString(username)}", null);
     }
 
+    public class UserRoleResponse
+    {
+        public string Role { get; set; } = string.Empty;
+    }
+
     public class UserInfo
     {
         public string Username { get; set; } = string.Empty;
@@ -146,7 +146,7 @@ else
     {
         public string Name { get; set; } = string.Empty;
         public int Count { get; set; }
-    }  
+    }
 
     public class StatisticsResponse
     {
