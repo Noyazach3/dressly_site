@@ -1,7 +1,7 @@
 ﻿@page "/add-item"
 @inject IConfiguration Configuration
-@using MySql.Data.MySqlClient
 @inject NavigationManager Navigation
+@inject HttpClient Http
 
 <div class="center-page">
     <h1>העלאת פריט לבוש</h1>
@@ -83,7 +83,6 @@
 </div>
 
 <style>
-    /* מרכזת את הכותרת */
     .center-page {
         display: flex;
         flex-direction: column;
@@ -97,7 +96,6 @@
         margin-bottom: 30px;
     }
 
-    /* מיכל הטופס */
     .form-container {
         width: 100%;
         max-width: 600px;
@@ -109,14 +107,14 @@
 
     .form-group {
         margin-bottom: 20px;
-        text-align: right; /* יישור לימין */
+        text-align: right;
     }
 
     label {
         display: block;
         font-weight: bold;
         margin-bottom: 5px;
-        text-align: right; /* יישור לימין */
+        text-align: right;
     }
 
     select, input, .file-upload {
@@ -125,10 +123,9 @@
         border: 1px solid #ccc;
         border-radius: 5px;
         box-sizing: border-box;
-        text-align: right; /* טקסט מיושר לימין */
+        text-align: right;
     }
 
-    /* עיצוב כפתור */
     .btn {
         font-size: 1.2rem;
         padding: 15px 30px;
@@ -151,7 +148,6 @@
 </style>
 
 @code {
-    // המודל כולל מזהה פריט – אם ItemID הוא 0, אז זהו פריט חדש (INSERT), אחרת נבצע UPDATE.
     private ClothingItem clothingItem = new ClothingItem();
     private IBrowserFile selectedFile;
 
@@ -164,6 +160,7 @@
     {
         if (selectedFile != null)
         {
+            // שמירת הקובץ בשרת (ניתן להתאים את הלוגיקה לפי הצורך)
             var filePath = Path.Combine("wwwroot", "images", selectedFile.Name);
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
@@ -173,88 +170,50 @@
             clothingItem.ImageURL = filePath;
             clothingItem.DateAdded = DateTime.Now;
 
-            // קריאה לפונקציה שמעדכנת את טבלת ClothingItems:
+            // קריאה ל-API לעדכון הדאטהבייס
             await SaveClothingItemToDatabase(clothingItem);
 
-            // ניווט לעמוד הבית לאחר השלמת הפעולה
+            // ניווט לעמוד הבית לאחר העדכון
             NavigateToHome();
         }
     }
 
-    /// <summary>
-    /// פונקציה שמעדכנת את טבלת ClothingItems.
-    /// אם ItemID = 0, מתבצעת הכנסת פריט חדש (INSERT).
-    /// אם ItemID > 0, מתבצעת עדכון פריט קיים (UPDATE).
-    /// </summary>
-    /// <param name="item">האובייקט ClothingItem שמכיל את הנתונים לעדכון.</param>
     private async Task SaveClothingItemToDatabase(ClothingItem item)
     {
-        var connectionString = Configuration.GetConnectionString("DefaultConnection");
-        using (var connection = new MySqlConnection(connectionString))
+        HttpResponseMessage response;
+
+        if (item.ItemID == 0)
         {
-            await connection.OpenAsync();
-
-            if (item.ItemID == 0)
-            {
-                // שאילתת INSERT – הכנסת פריט חדש
-                var query = @"INSERT INTO ClothingItems (Category, Season, UsageType, Color, ImageURL, WashAfterUses, DateAdded)
-                              VALUES (@Category, @Season, @UsageType, @Color, @ImageURL, @WashAfterUses, @DateAdded)";
-                using (var command = new MySqlCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@Category", item.Category);
-                    command.Parameters.AddWithValue("@Season", item.Season);
-                    command.Parameters.AddWithValue("@UsageType", item.UsageType);
-                    command.Parameters.AddWithValue("@Color", item.Color);
-                    command.Parameters.AddWithValue("@ImageURL", item.ImageURL);
-                    command.Parameters.AddWithValue("@WashAfterUses", item.WashAfterUses);
-                    command.Parameters.AddWithValue("@DateAdded", item.DateAdded);
-
-                    await command.ExecuteNonQueryAsync();
-                }
-            }
-            else
-            {
-                // שאילתת UPDATE – עדכון פריט קיים
-                var query = @"UPDATE ClothingItems
-                              SET Category = @Category,
-                                  Season = @Season,
-                                  UsageType = @UsageType,
-                                  Color = @Color,
-                                  ImageURL = @ImageURL,
-                                  WashAfterUses = @WashAfterUses,
-                                  DateAdded = @DateAdded
-                              WHERE ItemID = @ItemID";
-                using (var command = new MySqlCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@Category", item.Category);
-                    command.Parameters.AddWithValue("@Season", item.Season);
-                    command.Parameters.AddWithValue("@UsageType", item.UsageType);
-                    command.Parameters.AddWithValue("@Color", item.Color);
-                    command.Parameters.AddWithValue("@ImageURL", item.ImageURL);
-                    command.Parameters.AddWithValue("@WashAfterUses", item.WashAfterUses);
-                    command.Parameters.AddWithValue("@DateAdded", item.DateAdded);
-                    command.Parameters.AddWithValue("@ItemID", item.ItemID);
-
-                    await command.ExecuteNonQueryAsync();
-                }
-            }
+            // יצירת פריט חדש עם POST
+            response = await Http.PostAsJsonAsync("api/clothingitems", item);
         }
+        else
+        {
+            // עדכון פריט קיים עם PUT
+            response = await Http.PutAsJsonAsync($"api/clothingitems/{item.ItemID}", item);
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            // טיפול בשגיאה - ניתן להוסיף הודעת שגיאה למשתמש
+            Console.WriteLine("אירעה שגיאה בעדכון הפריט");
+        }
+    }
+
+    private void NavigateToHome()
+    {
+        Navigation.NavigateTo("/home");
     }
 
     public class ClothingItem
     {
-        public int ItemID { get; set; } // מזהה הפריט – 0 אם חדש
+        public int ItemID { get; set; } // 0 לפריט חדש
         public string Category { get; set; }
         public string Season { get; set; }
         public string UsageType { get; set; }
         public string Color { get; set; }
         public string ImageURL { get; set; }
-        public int WashAfterUses { get; set; } // מספר שימושים לפני כביסה
+        public int WashAfterUses { get; set; }
         public DateTime DateAdded { get; set; }
-    }
-
-    private void NavigateToHome()
-    {
-        Navigation.NavigateTo("/home"); // ניווט לעמוד הבית
     }
 }
