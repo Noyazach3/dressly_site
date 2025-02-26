@@ -13,6 +13,8 @@ namespace ClassLibrary1.Models
         public string Email { get; set; }
         public string PasswordHash { get; set; }
         public DateTime? CreatedDate { get; set; }
+        public string Role { get; set; } = "User"; // כל משתמש חדש מוגדר כ-User כברירת מחדל
+
 
         public ICollection<ClothingItem> ClothingItems { get; set; }
         public ICollection<Outfit> Outfits { get; set; }

@@ -1,8 +1,10 @@
 ﻿using System.Reflection;
+using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
+using ClassLibrary1.Services;
 
 namespace API
 {
@@ -11,6 +13,11 @@ namespace API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddScoped<IAdminService, AdminService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<ILoginSession, LoginSession>();
+            builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             // הוספת IConfiguration
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);

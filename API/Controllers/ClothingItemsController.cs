@@ -44,7 +44,7 @@ public class ClothingItemsController : ControllerBase
                             Category = reader.GetString("Category"),
                             Season = reader.GetString("Season"),
                             UsageType = reader.GetString("UsageType"),
-                            Color = reader.IsDBNull(reader.GetOrdinal("ColorName")) ? new ClassLibrary1.Models.Color() : new ClassLibrary1.Models.Color { Name = reader.GetString("ColorName") },
+                            Color = reader.IsDBNull(reader.GetOrdinal("ColorName")) ? new ClassLibrary1.Models.Color() : new ClassLibrary1.Models.Color { ColorName = reader.GetString("ColorName") },
                             ImageURL = reader.GetString("ImageURL"),
                             WashAfterUses = reader.GetInt32("WashAfterUses"),
                             DateAdded = reader.GetDateTime("DateAdded")
