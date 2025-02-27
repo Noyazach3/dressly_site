@@ -1,7 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ClassLibrary1.Models;
+using ClassLibrary2.Models;
 using Microsoft.Extensions.Configuration;
 using System.Data;
 

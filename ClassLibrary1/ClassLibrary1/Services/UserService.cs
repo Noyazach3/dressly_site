@@ -1,85 +1,81 @@
-﻿using MySql.Data.MySqlClient;
+﻿using System;
 using System.Threading.Tasks;
 using ClassLibrary1.Models;
-using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
 using System.Data;
 
 namespace ClassLibrary1.Services
 {
     public class UserService : IUserService
     {
-        private readonly IConfiguration _configuration;
+        private readonly string _connectionString = "your_connection_string_here";
 
-        public UserService(IConfiguration configuration)
+        public async Task<User> GetUserByIdAsync(int userId)
         {
-            _configuration = configuration;
-        }
-
-        private string GetConnectionString()
-        {
-            return _configuration.GetConnectionString("DefaultConnection");
-        }
-
-        public async Task<User> GetUserByIdAsync(int id)
-        {
-            using var connection = new MySqlConnection(GetConnectionString());
-            await connection.OpenAsync();
-            string query = "SELECT * FROM Users WHERE Id = @Id";
-
-            using var command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@Id", id);
-            using var reader = await command.ExecuteReaderAsync();
-
-            if (await reader.ReadAsync())
+            using (var connection = new MySqlConnection(_connectionString))
             {
-                return new User
+                await connection.OpenAsync();
+                string query = "SELECT * FROM Users WHERE UserID = @UserID";
+                using (var command = new MySqlCommand(query, connection))
                 {
-                    UserID = reader.GetInt32("Id"),
-                    Username = reader.GetString("Username"),
-                    Email = reader.GetString("Email"),
-                    Role = reader.GetString("Role")
-                };
+                    command.Parameters.AddWithValue("@UserID", userId);
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new User
+                            {
+                                UserID = reader.GetInt32("UserID"),
+                                Username = reader.GetString("Username"),
+                                PasswordHash = reader.GetString("PasswordHash")
+                            };
+                        }
+                    }
+                }
             }
             return null;
         }
 
         public async Task<User> GetUserByUsernameAsync(string username)
         {
-            using var connection = new MySqlConnection(GetConnectionString());
-            await connection.OpenAsync();
-            string query = "SELECT * FROM Users WHERE Username = @Username";
-
-            using var command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@Username", username);
-            using var reader = await command.ExecuteReaderAsync();
-
-            if (await reader.ReadAsync())
+            using (var connection = new MySqlConnection(_connectionString))
             {
-                return new User
+                await connection.OpenAsync();
+                string query = "SELECT * FROM Users WHERE Username = @Username";
+                using (var command = new MySqlCommand(query, connection))
                 {
-                    UserID = reader.GetInt32("Id"),
-                    Username = reader.GetString("Username"),
-                    Email = reader.GetString("Email"),
-                    Role = reader.GetString("Role")
-                };
+                    command.Parameters.AddWithValue("@Username", username);
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new User
+                            {
+                                UserID = reader.GetInt32("UserID"),
+                                Username = reader.GetString("Username"),
+                                PasswordHash = reader.GetString("PasswordHash")
+                            };
+                        }
+                    }
+                }
             }
             return null;
         }
 
         public async Task<bool> CreateUserAsync(User user)
         {
-            using var connection = new MySqlConnection(GetConnectionString());
-            await connection.OpenAsync();
-            string query = "INSERT INTO Users (Username, Email, PasswordHash, Role) VALUES (@Username, @Email, @PasswordHash, @Role)";
-
-            using var command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@Username", user.Username);
-            command.Parameters.AddWithValue("@Email", user.Email);
-            command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
-            command.Parameters.AddWithValue("@Role", user.Role);
-
-            int affectedRows = await command.ExecuteNonQueryAsync();
-            return affectedRows > 0;
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                string query = "INSERT INTO Users (Username, PasswordHash) VALUES (@Username, @PasswordHash)";
+                using (var command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Username", user.Username);
+                    command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
+                    int result = await command.ExecuteNonQueryAsync();
+                    return result > 0;
+                }
+            }
         }
     }
 }
