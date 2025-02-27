@@ -3,13 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dressly_site", "dressly_site\dressly_site.csproj", "{0A3A9A45-3E04-423A-9DCE-FA8B4F716885}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dressly_site2", "dressly_site\dressly_site2.csproj", "{0A3A9A45-3E04-423A-9DCE-FA8B4F716885}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API", "API\API.csproj", "{F3EB81F6-4478-4CB3-AB0C-13DBA1624E1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API2", "API\API2.csproj", "{F3EB81F6-4478-4CB3-AB0C-13DBA1624E1A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassLibrary1", "ClassLibrary1\ClassLibrary1.csproj", "{A43D0603-4F04-4EDF-8E5B-B6D8D8726EA1}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp2", "ConsoleApp2\ConsoleApp2.csproj", "{7BBBAD22-A8AA-4469-8960-2844909C44F5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassLibrary2", "ClassLibrary1\ClassLibrary1\ClassLibrary2.csproj", "{5DA296B7-3872-4173-9DDA-83D961DCA8C6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,14 +23,10 @@ Global
 		{F3EB81F6-4478-4CB3-AB0C-13DBA1624E1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3EB81F6-4478-4CB3-AB0C-13DBA1624E1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3EB81F6-4478-4CB3-AB0C-13DBA1624E1A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A43D0603-4F04-4EDF-8E5B-B6D8D8726EA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A43D0603-4F04-4EDF-8E5B-B6D8D8726EA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A43D0603-4F04-4EDF-8E5B-B6D8D8726EA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A43D0603-4F04-4EDF-8E5B-B6D8D8726EA1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7BBBAD22-A8AA-4469-8960-2844909C44F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7BBBAD22-A8AA-4469-8960-2844909C44F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7BBBAD22-A8AA-4469-8960-2844909C44F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7BBBAD22-A8AA-4469-8960-2844909C44F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DA296B7-3872-4173-9DDA-83D961DCA8C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DA296B7-3872-4173-9DDA-83D961DCA8C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DA296B7-3872-4173-9DDA-83D961DCA8C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DA296B7-3872-4173-9DDA-83D961DCA8C6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

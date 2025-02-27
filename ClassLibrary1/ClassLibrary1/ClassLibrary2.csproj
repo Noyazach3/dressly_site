@@ -7,8 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BootstrapBlazor" Version="9.2.6" />
-    <PackageReference Include="MySql.Data" Version="9.1.0" />
+    <None Include="ClassLibrary1.csproj" />
   </ItemGroup>
 
 </Project>
